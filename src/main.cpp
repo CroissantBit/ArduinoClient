@@ -4,7 +4,7 @@
 #include <pb_decode.h>
 
 // Protobuf generated file
-#include "common.pb.c"
+#include "common.pb.h"
 
 bool prefix(pb_ostream_t *stream, int msgid)
 {
@@ -16,27 +16,60 @@ void setup()
   Serial.begin(115200);
 }
 
+pb_istream_t istream = as_pb_istream(Serial);
+pb_ostream_t ostream = as_pb_ostream(Serial);
+
+// pb_istream_t istream = pb_istream_from_buffer(buffer, buffer_pos);
 void loop()
 {
-  SimpleMessage message = SimpleMessage_init_zero;
+  /*   uint8_t buffer[128];
+    size_t buffer_pos = 0; */
 
-  pb_ostream_t stream = as_pb_ostream(Serial);
-
-  /* Fill in the lucky number */
-  message.lucky_number = 13;
-  strcpy(message.message, "Hello world!");
-
-  /* Now we are ready to encode the message! */
-  prefix(&stream, 1);
-  status = pb_encode(&stream, &SimpleMessage_msg, &message);
-  message_length = stream.bytes_written;
-
-  /* Then just check for any errors.. */
-  if (!status)
+  // read into buffer until end of stream packet
+  /* while (Serial.available() > 0)
   {
-    Serial.print("Encoding failed: ");
-    Serial.println(PB_GET_ERROR(&stream));
+    // add to buffer
+    buffer[buffer_pos++] = Serial.read();
+    if (buffer_pos >= sizeof(buffer))
+    {
+      // buffer is full, exit loop
+      break;
+    }
+  } */
+
+  if (Serial.available() < 5)
+    return;
+
+  // Read the message ID header
+  uint8_t msgid;
+  if (!pb_read(&istream, (uint8_t *)&msgid, sizeof(msgid)))
+  {
+    Serial.println("Failed to read ID");
     return;
   }
-  delay(2000);
+
+  // Read the message
+  switch (msgid)
+  {
+  case croissantbit_Ping_msgid:
+  {
+    croissantbit_Ping ping;
+    if (!pb_decode(&istream, croissantbit_Ping_fields, &ping))
+      return;
+    // Clear the buffer
+    // memset(buffer, 0, sizeof(buffer));
+
+    if (!prefix(&ostream, croissantbit_Pong_msgid))
+      return;
+    croissantbit_Pong pong = croissantbit_Pong_init_zero;
+    if (!pb_encode(&ostream, croissantbit_Pong_fields, &pong))
+    {
+      Serial.println("Failed to encode");
+      return;
+    }
+    break;
+  }
+  default:
+    return;
+  }
 }
