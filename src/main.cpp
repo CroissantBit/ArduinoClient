@@ -4,7 +4,7 @@
 #include <pb_decode.h>
 
 // Protobuf generated file
-#include "common.pb.h"
+#include "main.pb.h"
 
 bool prefix(pb_ostream_t *stream, int msgid)
 {
