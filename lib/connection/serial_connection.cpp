@@ -1,24 +1,25 @@
 #include <Arduino.h>
+#include "serial_connection.h"
 
-#include "connection.h"
-#include "pb.h"
-#include "pb_encode.h"
-#include "pb_arduino.h"
-
-struct SerialConnection : public Connection
+SerialConnection::SerialConnection()
 {
-public:
-    bool open()
-    {
-        // TODO: Read from config
-        Serial.begin(115200);
+    istream = as_pb_istream(Serial);
+    ostream = as_pb_ostream(Serial);
+}
 
-        istream = as_pb_istream(Serial);
-        ostream = as_pb_ostream(Serial);
-    };
+void SerialConnection::open(int baud_rate)
+{
+    Serial.begin(baud_rate);
+}
 
-    bool close()
-    {
-        Serial.end();
-    };
-};
+void SerialConnection::close()
+{
+    Serial.end();
+}
+
+bool SerialConnection::send(const pb_msgdesc_t *field, const int msg_id, const void *msg_struct)
+{
+    if (!prefixMsg(&ostream, msg_id))
+        return false;
+    return pb_encode(&ostream, field, msg_struct);
+}
