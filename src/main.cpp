@@ -44,7 +44,7 @@ void loop()
   uint8_t msgid;
   if (!pb_read(&istream, (uint8_t *)&msgid, sizeof(msgid)))
   {
-    Serial.println("Failed to read ID");
+    // Serial.println("Failed to read ID");
     return;
   }
 
@@ -64,7 +64,7 @@ void loop()
     croissantbit_Pong pong = croissantbit_Pong_init_zero;
     if (!pb_encode(&ostream, croissantbit_Pong_fields, &pong))
     {
-      Serial.println("Failed to encode");
+      // Serial.println("Failed to encode");
       return;
     }
     break;
