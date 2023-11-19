@@ -3,8 +3,8 @@
 
 SerialConnection::SerialConnection()
 {
-    istream = as_pb_istream(Serial);
-    ostream = as_pb_ostream(Serial);
+    istream = as_pb_istream(cobs_in);
+    ostream = as_pb_ostream(cobs_out);
 }
 
 void SerialConnection::open(unsigned long baud_rate)
