@@ -1,18 +1,17 @@
 #pragma once
-#include "pb_arduino.h"
-#include "cobs/Stream.h"
+#include <Arduino.h>
+#include <cobs/Stream.h>
+#include <cobs/Print.h>
+#include <pb_arduino.h>
+#include "main.pb.h"
 
 struct Connection
 {
 protected:
-    packetio::COBSStream cobs_in;
-    packetio::COBSStream cobs_out;
-
-    pb_istream_t *istream;
-    pb_ostream_t *ostream;
+    pb_istream_t istream;
+    pb_ostream_t ostream;
 
     bool prefixMsg(int msgid);
-    bool sendKeepAlive();
 
 public:
     virtual void open(unsigned long baud_rate){};
