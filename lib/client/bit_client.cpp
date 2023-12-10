@@ -1,57 +1,57 @@
 #include "bit_client.h"
 
-BitClient::BitClient(Connection *connection)
+BitClient::BitClient(SerialConnection *connection)
 {
     this->connection = connection;
 }
 
-bool BitClient::registerClient(croissantbit_RegisterClientRequest registerClientRequest)
+bool BitClient::registerClient(croissantbit_RegisterClientRequest *registerClientRequest)
 {
-    return connection->send(&croissantbit_RegisterClientRequest_msg, croissantbit_RegisterClientRequest_msgid, &registerClientRequest);
+    return connection->send(&croissantbit_RegisterClientRequest_msg, croissantbit_RegisterClientRequest_msgid, &registerClientRequest, sizeof(*registerClientRequest));
 }
 
 /*
- * Returns true if the ping was sent, false if the ping either failed to be sent or wasn't sent because the keepalive interval hasn't passed yet.
+ * Check if the connection is still alive and tries to send a ping if it is.
  * Should be called in the main loop.
+ * @return false if the connection is still alive, true if it has been closed
  */
-bool BitClient::trySendPing()
+bool BitClient::updateKeepaliveState()
 {
-    unsigned long currentMillis = millis();
-    if (currentMillis - last_keepalive_probe_timestamp >= keepalive_interval)
+    if (keepalive_retries_left == 0)
     {
-        last_keepalive_probe_timestamp = currentMillis;
-        return sendPing();
+        connection->close();
+        return true;
     }
-    return false;
+
+    unsigned long currentMillis = millis();
+    if (millis() - keepalive_probe_timestamp >= keepalive_interval)
+    {
+        keepalive_probe_timestamp = currentMillis;
+        sendPing();
+        return false;
+    }
+    return true;
 }
 
 bool BitClient::sendPing()
 {
-    if (keepalive_retries == 0)
-    {
-        connection->close();
-        return false;
-    }
-    keepalive_retries--;
-    return connection->send(&croissantbit_Ping_msg, croissantbit_Ping_msgid, croissantbit_Ping_init_zero);
+
+    keepalive_retries_left--;
+    return connection->send(&croissantbit_Ping_msg, croissantbit_Ping_msgid, croissantbit_Ping_init_zero, 0);
 }
 
-void BitClient::handleMsg(int msg_id, void *msg_struct)
+void BitClient::handlePingMsg()
 {
-    switch (msg_id)
-    {
-    case croissantbit_Ping_msgid:
-    {
-        connection->send(&croissantbit_Pong_msg, croissantbit_Pong_msgid, croissantbit_Pong_init_zero);
-        break;
-    }
-    case croissantbit_Pong_msgid:
-    {
-        keepalive_retries = DEFAULT_KEEPALIVE_RETRIES;
-        break;
-    }
+    connection->send(&croissantbit_Pong_msg, croissantbit_Pong_msgid, croissantbit_Pong_init_zero, 0);
+}
 
-    default:
-        break;
-    }
+void BitClient::handlePongMsg()
+{
+    keepalive_retries_left = DEFAULT_KEEPALIVE_RETRIES;
+}
+
+void BitClient::handleRegisterClientResponseMsg(croissantbit_RegisterClientResponse *registerClientResponse)
+{
+    clientId = registerClientResponse->client_id;
+    playerState = registerClientResponse->state;
 }

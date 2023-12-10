@@ -1,25 +1,29 @@
 #pragma once
-#include "connection.h"
 #include "main.pb.h"
+#include "serial_connection.h"
 
 #define DEFAULT_KEEPALIVE_INTERVAL 5000
-#define DEFAULT_KEEPALIVE_RETRIES 3
+#define DEFAULT_KEEPALIVE_RETRIES 10
 
 struct BitClient
 {
 public:
     int clientId;
+    croissantbit_PlayerState playerState;
 
-    BitClient(Connection *connection);
-    bool registerClient(croissantbit_RegisterClientRequest registerClientRequest);
-    bool trySendPing();
-    void handleMsg(int msg_id, void *msg_struct);
+    BitClient(SerialConnection *connection);
+    bool registerClient(croissantbit_RegisterClientRequest *registerClientRequest);
+    bool updateKeepaliveState();
+
+    void handlePingMsg();
+    void handlePongMsg();
+    void handleRegisterClientResponseMsg(croissantbit_RegisterClientResponse *registerClientResponse);
 
 private:
     bool sendPing();
 
-    Connection *connection;
+    SerialConnection *connection;
     unsigned int keepalive_interval = DEFAULT_KEEPALIVE_INTERVAL;
-    unsigned int keepalive_retries = DEFAULT_KEEPALIVE_RETRIES;
-    unsigned long last_keepalive_probe_timestamp = 0;
+    unsigned int keepalive_retries_left = DEFAULT_KEEPALIVE_RETRIES;
+    unsigned long keepalive_probe_timestamp = 0;
 };

@@ -1,15 +1,34 @@
 #pragma once
-#include "connection.h"
+#include <PacketSerial.h>
+#include <pb_decode.h>
+#include <pb_encode.h>
 
-struct SerialConnection : public Connection
+#include "main.pb.h"
+
+#define HANDLE_RAW_MSG_CASE(msg_id, type)               \
+    case msg_id:                                        \
+    {                                                   \
+        type message = type##_init_zero;                \
+        if (pb_decode(&istream, &type##_msg, &message)) \
+            msgHandler(msg_id, &message);               \
+        break;                                          \
+    }
+
+struct SerialConnection
 {
-protected:
-    packetio::COBSStream cobs_in;
-    packetio::COBSPrint cobs_out;
+private:
+    // The callback for when a packet is decoded
+    void (*msgHandler)(int, void *);
 
 public:
+    PacketSerial packetSerial;
     SerialConnection();
+    void setHandlers(void (*packetCallback)(const uint8_t *buffer, size_t size), void (*msgCallback)(int, void *));
+
     void open(unsigned long baud_rate);
-    bool send(const pb_msgdesc_t *field, const int msg_id, const void *msg_struct);
     void close();
+
+    void update();
+    bool send(const pb_msgdesc_t *field, const int msg_id, const void *msg_struct, const size_t msg_size);
+    void receivePacket(const uint8_t *buffer, size_t size);
 };
