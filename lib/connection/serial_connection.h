@@ -29,6 +29,6 @@ public:
     void close();
 
     void update();
-    bool send(const pb_msgdesc_t *field, const int msg_id, const void *msg_struct, const size_t msg_size);
+    bool send(const pb_msgdesc_t *field, const uint16_t msg_id, const void *msg_struct);
     void receivePacket(const uint8_t *buffer, size_t size);
 };

@@ -19,9 +19,13 @@ void SerialConnection::close()
     Serial.end();
 }
 
-bool SerialConnection::send(const pb_msgdesc_t *field, const int msg_id, const void *msg_struct, const size_t msg_size)
+bool SerialConnection::send(const pb_msgdesc_t *field, const uint16_t msg_id, const void *msg_struct)
 {
-    uint8_t buf[msg_size + sizeof(msg_id)] = {0};
+    size_t size = 0;
+    if (!pb_get_encoded_size(&size, field, msg_struct))
+        return false;
+
+    uint8_t buf[size + sizeof(uint16_t)] = {0};
     pb_ostream_t ostream = pb_ostream_from_buffer(buf, sizeof(buf));
 
     if (!pb_write(&ostream, (pb_byte_t *)&msg_id, sizeof(msg_id)))
@@ -29,7 +33,7 @@ bool SerialConnection::send(const pb_msgdesc_t *field, const int msg_id, const v
     if (!pb_encode(&ostream, field, msg_struct))
         return false;
 
-    packetSerial.send(buf, sizeof(buf));
+    packetSerial.send(buf, ostream.bytes_written);
     return true;
 }
 
@@ -37,8 +41,8 @@ void SerialConnection::receivePacket(const uint8_t *buffer, size_t size)
 {
     // Not the greatest way to do this, should look into using a stream
     pb_istream_t istream = pb_istream_from_buffer(buffer, size);
-    int msgid = 0;
-    if (!pb_read(&istream, (pb_byte_t *)&msgid, sizeof(msgid)))
+    uint16_t msgid = 0;
+    if (!pb_read(&istream, (pb_byte_t *)&msgid, sizeof(uint16_t)))
         return;
 
     switch (msgid)

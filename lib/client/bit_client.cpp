@@ -7,7 +7,7 @@ BitClient::BitClient(SerialConnection *connection)
 
 bool BitClient::registerClient(croissantbit_RegisterClientRequest *registerClientRequest)
 {
-    return connection->send(&croissantbit_RegisterClientRequest_msg, croissantbit_RegisterClientRequest_msgid, &registerClientRequest, sizeof(*registerClientRequest));
+    return connection->send(&croissantbit_RegisterClientRequest_msg, croissantbit_RegisterClientRequest_msgid, &registerClientRequest);
 }
 
 /*
@@ -37,12 +37,12 @@ bool BitClient::sendPing()
 {
 
     keepalive_retries_left--;
-    return connection->send(&croissantbit_Ping_msg, croissantbit_Ping_msgid, croissantbit_Ping_init_zero, 0);
+    return connection->send(&croissantbit_Ping_msg, croissantbit_Ping_msgid, croissantbit_Ping_init_zero);
 }
 
 void BitClient::handlePingMsg()
 {
-    connection->send(&croissantbit_Pong_msg, croissantbit_Pong_msgid, croissantbit_Pong_init_zero, 0);
+    connection->send(&croissantbit_Pong_msg, croissantbit_Pong_msgid, croissantbit_Pong_init_zero);
 }
 
 void BitClient::handlePongMsg()
