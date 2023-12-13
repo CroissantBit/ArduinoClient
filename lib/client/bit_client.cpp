@@ -55,3 +55,8 @@ void BitClient::handleRegisterClientResponseMsg(croissantbit_RegisterClientRespo
     clientId = registerClientResponse->client_id;
     playerState = registerClientResponse->state;
 }
+
+void BitClient::handlePlayerStateUpdateMsg(croissantbit_PlayerStateUpdate *playerStateUpdate)
+{
+    playerState = playerStateUpdate->state;
+}

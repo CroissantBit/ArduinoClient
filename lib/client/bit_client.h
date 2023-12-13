@@ -18,6 +18,7 @@ public:
     void handlePingMsg();
     void handlePongMsg();
     void handleRegisterClientResponseMsg(croissantbit_RegisterClientResponse *registerClientResponse);
+    void handlePlayerStateUpdateMsg(croissantbit_PlayerStateUpdate *playerStateUpdate);
 
 private:
     bool sendPing();
