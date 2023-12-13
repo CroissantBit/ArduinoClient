@@ -4,12 +4,11 @@
 
 #include "serial_connection.h"
 #include "bit_client.h"
+#include "screen.h"
+#include "env.h"
 
 // Protobuf generated file
 #include "main.pb.h"
-
-#define ERROR_LED_OUT 13
-#define WARN_LED_OUT 13
 
 #define HANDLE_MSG_CASE(msg_id, type, code)                          \
     case msg_id:                                                     \
