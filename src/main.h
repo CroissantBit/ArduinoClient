@@ -18,7 +18,7 @@
         break;                                                       \
     }
 
-#define ERROR_OUT() digitalWrite(ERROR_LED_OUT, HIGH)
-#define WARN_OUT() digitalWrite(WARN_LED_OUT, HIGH)
+#define ERROR_OUT() digitalWrite(ERROR_LED_PIN, HIGH)
+#define WARN_OUT() digitalWrite(WARN_LED_PIN, HIGH)
 
 void handleMsg(int msg_id, void *msg_struct);

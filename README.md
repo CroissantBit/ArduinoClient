@@ -15,7 +15,7 @@ git clone https://github.com/CroissantBit/ArduinoClient.git
 cd ArduinoClient
 
 # Open the dir in your preferred editor or continue with the CLI
-# Modify platformio.ini and env.h files to match your setup (display and board)
+# Modify platformio.ini and env.h files to match your setup (display and board pins)
 # See: https://docs.platformio.org/en/stable/core/quickstart.html
 vim platformio.ini
 vim src/env.h
