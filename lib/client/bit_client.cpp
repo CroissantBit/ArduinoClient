@@ -119,5 +119,5 @@ void BitClient::handleVideoFrameUpdateMsg(croissantbit_VideoFrameUpdate *videoFr
     int y = videoFrameUpdate->pixel.y;
     uint32_t color = GetNearestColor(videoFrameUpdate->pixel.color);
 
-    screen->tft.drawPixel(x, y, color);
+    screen->tft.drawFastHLine(x, y, videoFrameUpdate->pixel.count, color);
 }
