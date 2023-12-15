@@ -75,16 +75,14 @@ bool BitClient::updateKeepaliveState()
     if (currentMillis - keepalive_probe_timestamp >= keepalive_interval)
     {
         keepalive_probe_timestamp = currentMillis;
+        keepalive_retries_left--;
         sendPing();
-        return false;
     }
-    return true;
+    return false;
 }
 
 bool BitClient::sendPing()
 {
-
-    keepalive_retries_left--;
     return connection->send(&croissantbit_Ping_msg, croissantbit_Ping_msgid, croissantbit_Ping_init_zero);
 }
 
@@ -107,6 +105,10 @@ void BitClient::handleRegisterClientResponseMsg(croissantbit_RegisterClientRespo
 void BitClient::handlePlayerStateUpdateMsg(croissantbit_PlayerStateUpdate *playerStateUpdate)
 {
     playerState = playerStateUpdate->state;
+    screen->tft.fillScreen(TFT_BLACK);
+
+    if (playerState == croissantbit_PlayerState_IDLE)
+        return screen->displayWaiting();
 }
 
 void BitClient::handleSignalStateUpdateMsg(croissantbit_SignalStateUpdate *signalStateUpdate)

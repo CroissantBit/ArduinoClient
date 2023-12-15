@@ -8,7 +8,11 @@ Screen::Screen()
     tft.setRotation(0);
     tft.fillScreen(TFT_BLACK);
 
-    // Draw 3 "waiting dots"
+    displayWaiting();
+}
+
+void Screen::displayWaiting()
+{
     auto middleX = tft.width() / 2;
     auto middleY = tft.height() / 2;
     auto gap = 20;

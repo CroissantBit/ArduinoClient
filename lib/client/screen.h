@@ -9,6 +9,7 @@ public:
     TFT_eSPI tft;
     Screen();
 
+    void displayWaiting();
     void displayArrow(croissantbit_SignalDirection, int tft_color);
 
 private:

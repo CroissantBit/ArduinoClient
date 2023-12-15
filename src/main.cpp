@@ -22,12 +22,12 @@ void setup()
 void loop()
 {
   // Handle new client repsone
-  bitClient->checkSignalInputs();
   connection->packetSerial.update();
   if (connection->packetSerial.overflow())
     return ERROR_OUT();
   if (bitClient->updateKeepaliveState())
     return ERROR_OUT();
+  bitClient->checkSignalInputs();
 }
 
 void handleMsg(int msg_id, void *msg_struct)
