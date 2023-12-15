@@ -6,9 +6,56 @@ BitClient::BitClient(SerialConnection *connection, Screen *screen)
     this->screen = screen;
 }
 
+BitClient::BitClient(SerialConnection *connection, Screen *screen, int btnPinUp, int btnPinDown, int btnPinLeft, int btnPinRight)
+{
+    this->connection = connection;
+    this->screen = screen;
+
+    this->btnPinUp = btnPinUp;
+    this->btnPinDown = btnPinDown;
+    this->btnPinLeft = btnPinLeft;
+    this->btnPinRight = btnPinRight;
+
+    // Enable internal pullup resistors
+    pinMode(btnPinUp, INPUT_PULLUP);
+    pinMode(btnPinDown, INPUT_PULLUP);
+    pinMode(btnPinLeft, INPUT_PULLUP);
+    pinMode(btnPinRight, INPUT_PULLUP);
+}
+
 bool BitClient::registerClient(croissantbit_RegisterClientRequest *registerClientRequest)
 {
     return connection->send(&croissantbit_RegisterClientRequest_msg, croissantbit_RegisterClientRequest_msgid, &registerClientRequest);
+}
+
+void BitClient::checkSignalInputs()
+{
+    auto currentMillis = millis();
+    if (currentMillis - signal_check_timestamp < SIGNAL_CHECK_INTERVAL)
+        return;
+    signal_check_timestamp = currentMillis;
+
+    croissantbit_SignalUpdateRequest signalUpdateRequest = croissantbit_SignalUpdateRequest_init_zero;
+    if (digitalRead(btnPinUp) == LOW)
+    {
+        signalUpdateRequest.direction = croissantbit_SignalDirection_UP;
+        connection->send(&croissantbit_SignalUpdateRequest_msg, croissantbit_SignalUpdateRequest_msgid, &signalUpdateRequest);
+    }
+    else if (digitalRead(btnPinDown) == LOW)
+    {
+        signalUpdateRequest.direction = croissantbit_SignalDirection_DOWN;
+        connection->send(&croissantbit_SignalUpdateRequest_msg, croissantbit_SignalUpdateRequest_msgid, &signalUpdateRequest);
+    }
+    else if (digitalRead(btnPinLeft) == LOW)
+    {
+        signalUpdateRequest.direction = croissantbit_SignalDirection_LEFT;
+        connection->send(&croissantbit_SignalUpdateRequest_msg, croissantbit_SignalUpdateRequest_msgid, &signalUpdateRequest);
+    }
+    else if (digitalRead(btnPinRight) == LOW)
+    {
+        signalUpdateRequest.direction = croissantbit_SignalDirection_RIGHT;
+        connection->send(&croissantbit_SignalUpdateRequest_msg, croissantbit_SignalUpdateRequest_msgid, &signalUpdateRequest);
+    }
 }
 
 /*
@@ -25,7 +72,7 @@ bool BitClient::updateKeepaliveState()
     }
 
     unsigned long currentMillis = millis();
-    if (millis() - keepalive_probe_timestamp >= keepalive_interval)
+    if (currentMillis - keepalive_probe_timestamp >= keepalive_interval)
     {
         keepalive_probe_timestamp = currentMillis;
         sendPing();
@@ -62,52 +109,9 @@ void BitClient::handlePlayerStateUpdateMsg(croissantbit_PlayerStateUpdate *playe
     playerState = playerStateUpdate->state;
 }
 
-// Returns the color that is closest to tft.h
-uint32_t GetNearestColor(croissantbit_Color color)
+void BitClient::handleSignalStateUpdateMsg(croissantbit_SignalStateUpdate *signalStateUpdate)
 {
-    switch (color)
-    {
-    case croissantbit_Color_BLACK:
-        return TFT_BLACK;
-    case croissantbit_Color_NAVY:
-        return TFT_NAVY;
-    case croissantbit_Color_DARKGREEN:
-        return TFT_DARKGREEN;
-    case croissantbit_Color_DARKCYAN:
-        return TFT_DARKCYAN;
-    case croissantbit_Color_MAROON:
-        return TFT_MAROON;
-    case croissantbit_Color_PURPLE:
-        return TFT_PURPLE;
-    case croissantbit_Color_OLIVE:
-        return TFT_OLIVE;
-    case croissantbit_Color_LIGHTGREY:
-        return TFT_LIGHTGREY;
-    case croissantbit_Color_DARKGREY:
-        return TFT_DARKGREY;
-    case croissantbit_Color_BLUE:
-        return TFT_BLUE;
-    case croissantbit_Color_GREEN:
-        return TFT_GREEN;
-    case croissantbit_Color_CYAN:
-        return TFT_CYAN;
-    case croissantbit_Color_RED:
-        return TFT_RED;
-    case croissantbit_Color_MAGENTA:
-        return TFT_MAGENTA;
-    case croissantbit_Color_YELLOW:
-        return TFT_YELLOW;
-    case croissantbit_Color_WHITE:
-        return TFT_WHITE;
-    case croissantbit_Color_ORANGE:
-        return TFT_ORANGE;
-    case croissantbit_Color_GREENYELLOW:
-        return TFT_GREENYELLOW;
-    case croissantbit_Color_PINK:
-        return TFT_PINK;
-    default:
-        return TFT_BLACK;
-    }
+    screen->displayArrow(signalStateUpdate->direction, TFT_WHITE);
 }
 
 void BitClient::handleVideoFrameUpdateMsg(croissantbit_VideoFrameUpdate *videoFrameUpdate)
@@ -117,7 +121,7 @@ void BitClient::handleVideoFrameUpdateMsg(croissantbit_VideoFrameUpdate *videoFr
 
     int x = videoFrameUpdate->pixel.x;
     int y = videoFrameUpdate->pixel.y;
-    uint32_t color = GetNearestColor(videoFrameUpdate->pixel.color);
+    uint32_t color = getNearestColor(videoFrameUpdate->pixel.color);
 
     screen->tft.drawFastHLine(x, y, videoFrameUpdate->pixel.count, color);
 }

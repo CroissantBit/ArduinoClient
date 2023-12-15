@@ -51,6 +51,7 @@ void SerialConnection::receivePacket(const uint8_t *buffer, size_t size)
         HANDLE_RAW_MSG_CASE(croissantbit_Pong_msgid, croissantbit_Pong);
         HANDLE_RAW_MSG_CASE(croissantbit_RegisterClientResponse_msgid, croissantbit_RegisterClientResponse);
         HANDLE_RAW_MSG_CASE(croissantbit_VideoFrameUpdate_msgid, croissantbit_VideoFrameUpdate);
+        HANDLE_RAW_MSG_CASE(croissantbit_SignalStateUpdate_msgid, croissantbit_SignalStateUpdate);
         HANDLE_RAW_MSG_CASE(croissantbit_PlayerStateUpdate_msgid, croissantbit_PlayerStateUpdate);
     }
 }

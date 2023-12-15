@@ -11,27 +11,18 @@ void setup()
 
   connection = new SerialConnection();
   screen = new Screen();
-  bitClient = new BitClient(connection, screen);
+  bitClient = new BitClient(connection, screen, BTN_UP_PIN, BTN_DOWN_PIN, BTN_LEFT_PIN, BTN_RIGHT_PIN);
 
   connection->setHandlers([](const uint8_t *buffer, size_t size)
                           { connection->receivePacket(buffer, size); },
                           &handleMsg);
   connection->open(115200L);
-
-  /*
-  croissantbit_VideoFrameUpdate videoFrameUpdate = croissantbit_VideoFrameUpdate_init_zero;
-   videoFrameUpdate.has_pixel = true;
-   videoFrameUpdate.pixel.x = 30;
-   videoFrameUpdate.pixel.y = 80;
-   videoFrameUpdate.pixel.color = croissantbit_Color_PINK;
-
-   connection->send(&croissantbit_VideoFrameUpdate_msg, croissantbit_VideoFrameUpdate_msgid, &videoFrameUpdate);
-  */
 }
 
 void loop()
 {
   // Handle new client repsone
+  bitClient->checkSignalInputs();
   connection->packetSerial.update();
   if (connection->packetSerial.overflow())
     return ERROR_OUT();
@@ -47,6 +38,7 @@ void handleMsg(int msg_id, void *msg_struct)
     HANDLE_MSG_CASE(croissantbit_Pong_msgid, croissantbit_Pong, bitClient->handlePongMsg());
     HANDLE_MSG_CASE(croissantbit_RegisterClientResponse_msgid, croissantbit_RegisterClientResponse, bitClient->handleRegisterClientResponseMsg(msg));
     HANDLE_MSG_CASE(croissantbit_VideoFrameUpdate_msgid, croissantbit_VideoFrameUpdate, bitClient->handleVideoFrameUpdateMsg(msg));
+    HANDLE_MSG_CASE(croissantbit_SignalStateUpdate_msgid, croissantbit_SignalStateUpdate, bitClient->handleSignalStateUpdateMsg(msg));
     HANDLE_MSG_CASE(croissantbit_PlayerStateUpdate_msgid, croissantbit_PlayerStateUpdate, bitClient->handlePlayerStateUpdateMsg(msg));
   default:
     break;
