@@ -23,13 +23,20 @@ BitClient::BitClient(SerialConnection *connection, Screen *screen, int btnPinUp,
     pinMode(btnPinRight, INPUT_PULLUP);
 }
 
-bool BitClient::registerClient(croissantbit_RegisterClientRequest *registerClientRequest)
+bool BitClient::registerClient()
 {
+    croissantbit_RegisterClientRequest registerClientRequest = croissantbit_RegisterClientRequest_init_zero;
+    registerClientRequest.width = screen->tft.width();
+    registerClientRequest.height = screen->tft.height();
+
     return connection->send(&croissantbit_RegisterClientRequest_msg, croissantbit_RegisterClientRequest_msgid, &registerClientRequest);
 }
 
 void BitClient::checkSignalInputs()
 {
+    if (playerState != croissantbit_PlayerState_ACTIVE)
+        return;
+
     auto currentMillis = millis();
     if (currentMillis - signal_check_timestamp < SIGNAL_CHECK_INTERVAL)
         return;
@@ -68,6 +75,7 @@ bool BitClient::updateKeepaliveState()
     if (keepalive_retries_left == 0)
     {
         connection->close();
+        screen->displayStatus(TFT_RED);
         return true;
     }
 
@@ -100,6 +108,11 @@ void BitClient::handleRegisterClientResponseMsg(croissantbit_RegisterClientRespo
 {
     clientId = registerClientResponse->client_id;
     playerState = registerClientResponse->state;
+
+    if (playerState == croissantbit_PlayerState_ACTIVE)
+        screen->tft.fillScreen(TFT_BLACK);
+    else
+        screen->displayStatus(TFT_GREEN);
 }
 
 void BitClient::handlePlayerStateUpdateMsg(croissantbit_PlayerStateUpdate *playerStateUpdate)
@@ -108,12 +121,20 @@ void BitClient::handlePlayerStateUpdateMsg(croissantbit_PlayerStateUpdate *playe
     screen->tft.fillScreen(TFT_BLACK);
 
     if (playerState == croissantbit_PlayerState_IDLE)
-        return screen->displayWaiting();
+        return screen->displayStatus(TFT_GREEN);
 }
 
 void BitClient::handleSignalStateUpdateMsg(croissantbit_SignalStateUpdate *signalStateUpdate)
 {
     screen->displayArrow(signalStateUpdate->direction, TFT_WHITE);
+}
+
+void BitClient::handleSignalUpdateResponseMsg(croissantbit_SignalUpdateResponse *signalUpdateResponse)
+{
+    if (signalUpdateResponse->success)
+        screen->displaySignal(TFT_GREEN);
+    else
+        screen->displaySignal(TFT_RED);
 }
 
 void BitClient::handleVideoFrameUpdateMsg(croissantbit_VideoFrameUpdate *videoFrameUpdate)

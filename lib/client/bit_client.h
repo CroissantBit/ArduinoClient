@@ -17,7 +17,7 @@ public:
 
     BitClient(SerialConnection *connection, Screen *screen);
     BitClient(SerialConnection *connection, Screen *screen, int btnPinUp, int btnPinDown, int btnPinLeft, int btnPinRight);
-    bool registerClient(croissantbit_RegisterClientRequest *registerClientRequest);
+    bool registerClient();
     bool updateKeepaliveState();
     void checkSignalInputs();
 
@@ -26,6 +26,7 @@ public:
     void handleRegisterClientResponseMsg(croissantbit_RegisterClientResponse *registerClientResponse);
     void handlePlayerStateUpdateMsg(croissantbit_PlayerStateUpdate *playerStateUpdate);
     void handleSignalStateUpdateMsg(croissantbit_SignalStateUpdate *signalStateUpdate);
+    void handleSignalUpdateResponseMsg(croissantbit_SignalUpdateResponse *signalUpdateResponse);
     void handleVideoFrameUpdateMsg(croissantbit_VideoFrameUpdate *videoFrameUpdate);
 
 private:

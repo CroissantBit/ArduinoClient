@@ -17,11 +17,13 @@ void setup()
                           { connection->receivePacket(buffer, size); },
                           &handleMsg);
   connection->open(115200L);
+
+  if (!bitClient->registerClient())
+    return ERROR_OUT();
 }
 
 void loop()
 {
-  // Handle new client repsone
   connection->packetSerial.update();
   if (connection->packetSerial.overflow())
     return ERROR_OUT();
@@ -39,6 +41,7 @@ void handleMsg(int msg_id, void *msg_struct)
     HANDLE_MSG_CASE(croissantbit_RegisterClientResponse_msgid, croissantbit_RegisterClientResponse, bitClient->handleRegisterClientResponseMsg(msg));
     HANDLE_MSG_CASE(croissantbit_VideoFrameUpdate_msgid, croissantbit_VideoFrameUpdate, bitClient->handleVideoFrameUpdateMsg(msg));
     HANDLE_MSG_CASE(croissantbit_SignalStateUpdate_msgid, croissantbit_SignalStateUpdate, bitClient->handleSignalStateUpdateMsg(msg));
+    HANDLE_MSG_CASE(croissantbit_SignalUpdateResponse_msgid, croissantbit_SignalUpdateResponse, bitClient->handleSignalUpdateResponseMsg(msg));
     HANDLE_MSG_CASE(croissantbit_PlayerStateUpdate_msgid, croissantbit_PlayerStateUpdate, bitClient->handlePlayerStateUpdateMsg(msg));
   default:
     break;
